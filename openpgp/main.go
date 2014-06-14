@@ -5,8 +5,8 @@ import (
 	"crypto/openpgp"
 	"crypto/openpgp/armor"
 	"fmt"
-	"github.com/howeyc/gopass"
-	"log"
+	//"github.com/howeyc/gopass"
+
 	"os"
 	"time"
 )
@@ -24,35 +24,36 @@ func getKeyByEmail(keyring openpgp.EntityList, email string) *openpgp.Entity {
 }
 
 func main() {
-	fmt.Println("OpenPGP sample!")
 
-	pubringFile, _ := os.Open("E:\\huangyg\\PGP\\p2club.pkr")
+	pubringFile, _ := os.Open("path to public keyring")
 	defer pubringFile.Close()
 	pubring, _ := openpgp.ReadKeyRing(pubringFile)
-	theirPublicKey := getKeyByEmail(pubring, "huangyg@p2club.org")
+	//theirPublicKey := getKeyByEmail(pubring, "someone@xuemen.com")
+	theirPublicKey := getKeyByEmail(pubring, "someone@their.org")
 
-	privringFile, _ := os.Open("E:\\huangyg\\PGP\\p2club.skr")
-	defer privringFile.Close()
-	privring, _ := openpgp.ReadKeyRing(privringFile)
-	myPrivateKey := getKeyByEmail(privring, "huangyg@p2club.org")
+	secringFile, _ := os.Open("path to private keyring")
+	defer secringFile.Close()
+	sevring, _ := openpgp.ReadKeyRing(secringFile)
+	myPrivateKey := getKeyByEmail(sevring, "huangyg@xuemen.com")
 
 	//theirPublicKey.Serialize(os.Stdout)
 	//myPrivateKey.Serialize(os.Stdout)
 	//myPrivateKey.SerializePrivate(os.Stdout, nil)
 
-	log.Println(theirPublicKey)
-	log.Println(myPrivateKey)
+	myPrivateKey.PrivateKey.Decrypt([]byte("passphrase"))
+	/*
+		// bug: have to input the correct passphrase at the first time
 
-	myPrivateKey.PrivateKey.Decrypt([]byte("abcde"))
-	for myPrivateKey.PrivateKey.Encrypted {
-		fmt.Print("PGP passphrase: ")
-		pgppass := gopass.GetPasswd()
+		for myPrivateKey.PrivateKey.Encrypted {
+			fmt.Print("PGP passphrase: ")
+			pgppass := gopass.GetPasswd()
 
-		myPrivateKey.PrivateKey.Decrypt([]byte(pgppass))
-		if myPrivateKey.PrivateKey.Encrypted {
-			fmt.Println("Incorrect. Try again or press ctrl+c to exit.")
+			myPrivateKey.PrivateKey.Decrypt([]byte(pgppass))
+			if myPrivateKey.PrivateKey.Encrypted {
+				fmt.Println("Incorrect. Try again or press ctrl+c to exit.")
+			}
 		}
-	}
+	*/
 
 	var hint openpgp.FileHints
 	hint.IsBinary = false
@@ -60,9 +61,9 @@ func main() {
 	hint.ModTime = time.Now()
 
 	w, _ := armor.Encode(os.Stdout, "PGP MESSAGE", nil)
+	defer w.Close()
 	plaintext, _ := openpgp.Encrypt(w, []*openpgp.Entity{theirPublicKey}, myPrivateKey, &hint, nil)
+	defer plaintext.Close()
+
 	fmt.Fprintf(plaintext, "黄勇刚在熟悉OpenPGP代码\n")
-	plaintext.Close()
-	w.Close()
-	fmt.Printf("\n")
 }
