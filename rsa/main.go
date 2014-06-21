@@ -9,6 +9,7 @@ import (
 	//"encoding/base64"
 	"crypto/x509"
 	"encoding/pem"
+	//"fmt"
 	"log"
 )
 
@@ -163,6 +164,7 @@ func main() {
 	pempub = exportPublicKeytoPEM(pub)
 	//pemsec = exportPrivateKeytoPEM(sec)
 	pemsec = exportPrivateKeytoEncryptedPEM(sec, []byte("asdfgh"))
+	//fmt.Printf("%s", pemsec)
 
 	pub = importPublicKeyfromPEM(pempub)
 	//sec = importPrivateKeyfromPEM(pemsec)
@@ -171,7 +173,7 @@ func main() {
 	sig := Sign(sec, []byte("data"))
 
 	err := VerifySign(pub, []byte("data"), sig)
-	log.Print(err) // err is nil ==> good sig
+	log.Print("err is nil ==> good sig: \t", err)
 
 	msg := []byte("http://www.weibo.com/huangyg")
 	secmsg, _ := EncryptV2(pub, msg, []byte(""))
