@@ -89,6 +89,26 @@ func exportPrivateKeytoPEM(sec *rsa.PrivateKey) []byte {
 	return n
 }
 
+// import private key from pem format
+func importPrivateKeyfromEncryptedPEM(pemsec, password []byte) *rsa.PrivateKey {
+	block, _ := pem.Decode(pemsec)
+	//log.Print(block)
+	buf, _ := x509.DecryptPEMBlock(block, password)
+	sec, _ := x509.ParsePKCS1PrivateKey(buf)
+	//log.Print(sec)
+	return sec
+}
+
+// export private key to pem format
+func exportPrivateKeytoEncryptedPEM(sec *rsa.PrivateKey, password []byte) []byte {
+	l := x509.MarshalPKCS1PrivateKey(sec)
+	m, _ := x509.EncryptPEMBlock(rand.Reader, "RSA PRIVATE KEY", l, password, x509.PEMCipherAES128)
+	n := pem.EncodeToMemory(m)
+	//log.Print(string(n))
+
+	return n
+}
+
 func VerifySign(pub *rsa.PublicKey, msg, sig []byte) error {
 	t := sha1.New()
 	//io.WriteString(t, msg)  // when msg is a string
@@ -141,10 +161,12 @@ func main() {
 	pub := &sec.PublicKey
 
 	pempub = exportPublicKeytoPEM(pub)
-	pemsec = exportPrivateKeytoPEM(sec)
+	//pemsec = exportPrivateKeytoPEM(sec)
+	pemsec = exportPrivateKeytoEncryptedPEM(sec, []byte("asdfgh"))
 
 	pub = importPublicKeyfromPEM(pempub)
-	sec = importPrivateKeyfromPEM(pemsec)
+	//sec = importPrivateKeyfromPEM(pemsec)
+	sec = importPrivateKeyfromEncryptedPEM(pemsec, []byte("asdfgh"))
 
 	sig := Sign(sec, []byte("data"))
 
