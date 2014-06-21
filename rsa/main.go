@@ -9,7 +9,7 @@ import (
 	//"encoding/base64"
 	"crypto/x509"
 	"encoding/pem"
-	//"fmt"
+	"fmt"
 	"log"
 )
 
@@ -103,7 +103,7 @@ func importPrivateKeyfromEncryptedPEM(pemsec, password []byte) *rsa.PrivateKey {
 // export private key to pem format
 func exportPrivateKeytoEncryptedPEM(sec *rsa.PrivateKey, password []byte) []byte {
 	l := x509.MarshalPKCS1PrivateKey(sec)
-	m, _ := x509.EncryptPEMBlock(rand.Reader, "RSA PRIVATE KEY", l, password, x509.PEMCipherAES128)
+	m, _ := x509.EncryptPEMBlock(rand.Reader, "RSA PRIVATE KEY", l, password, x509.PEMCipherAES256)
 	n := pem.EncodeToMemory(m)
 	//log.Print(string(n))
 
@@ -164,7 +164,7 @@ func main() {
 	pempub = exportPublicKeytoPEM(pub)
 	//pemsec = exportPrivateKeytoPEM(sec)
 	pemsec = exportPrivateKeytoEncryptedPEM(sec, []byte("asdfgh"))
-	//fmt.Printf("%s", pemsec)
+	fmt.Printf("%s", pemsec)
 
 	pub = importPublicKeyfromPEM(pempub)
 	//sec = importPrivateKeyfromPEM(pemsec)
