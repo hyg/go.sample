@@ -23,7 +23,46 @@ func getKeyByEmail(keyring openpgp.EntityList, email string) *openpgp.Entity {
 	return nil
 }
 
+// NewEntity creates a new entity. It doesn't provide an option for comments.
+func NewEntity(name, email, outFile string) (ne *openpgp.Entity, err error) {
+	ne, err = openpgp.NewEntity(name, "", email, nil)
+	if err != nil {
+		return
+	}
+
+	out, err := os.Create(outFile)
+	if err != nil {
+		ne = nil
+		return
+	}
+
+	hdr := map[string]string{
+		"Version": "Keybase Go client (OpenPGP version v0.1)",
+	}
+
+	keyOut, err := armor.Encode(out, openpgp.PrivateKeyType, hdr)
+	if err != nil {
+		ne = nil
+		return
+	}
+
+	defer func() {
+		keyOut.Close()
+		out.Close()
+	}()
+
+	err = ne.SerializePrivate(keyOut, nil)
+	if err != nil {
+		ne = nil
+		return
+	}
+
+	return
+}
+
 func main() {
+	//NewEntity("hyg", "huangyg@mars22.com", "secfile.key")
+	//return
 
 	pubringFile, _ := os.Open("path to public keyring")
 	defer pubringFile.Close()
